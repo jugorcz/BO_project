@@ -1,29 +1,37 @@
 from lxml import etree
 import random
+import sys
 
-guestsNumber = 100
-
+def getCustomRandom():
+    limit = [0 for i in range(6)]
+    limit[0] = 40
+    limit[1] = 20
+    limit[2] = 15
+    limit[3] = 10
+    limit[4] = 8
+    limit[5] = 7
+    limitsSum = limit[0] + limit[1] + limit[2] + limit[3] + limit[4] + limit[5]
+    print("")
+    rand = random.randint(0,limitsSum)
+    base = 0
+    for i in range(6):
+        print(str(i) + " range: " + str(base) + " - " + str(base + limit[i]) + " number: " + str(rand))
+        if rand in range(base, base + limit[i]):
+            return i 
+        else:
+            base += limit[i]
+    return 0
 
 def generateGuests(guestsNumber, document):
-    fivesLeft = guestsNumber / 2
-    counter = 0
     for i in range(guestsNumber):
         for j in range(i + 1, guestsNumber):
             guestsPair = "[g" + str(i) + "][g" + str(j) + "]"
-
-            guestsRelation = random.randint(0, 5)
-            if guestsRelation == 5:
-                if fivesLeft <= 0:
-                    while guestsRelation == 5:
-                        guestsRelation = random.randint(0, 5)
-                else:
-                    fivesLeft -= 1
-
+            guestsRelation = getCustomRandom()
             etree.SubElement(document, "pair", name=guestsPair).text = str(guestsRelation)
-            counter += 1
 
 
-def main():
+def generateGuestsList(num):
+    guestsNumber = num
     root = etree.Element("root")
     etree.SubElement(root, "guestsNumber", name=str(guestsNumber))
     document = etree.SubElement(root, "guestsList")
@@ -33,6 +41,16 @@ def main():
     et = etree.ElementTree(root)
     et.write("generatedData.xml", pretty_print=True)
 
-
 if __name__ == "__main__":
-    main()
+    argNum = len(sys.argv)
+    if argNum != 2:
+        print("Error: missing number of guests")
+        sys.exit(1)
+
+    arg = int(sys.argv[1])
+    if arg == 0:
+        print("Error: wrong guests number")
+        sys.exit(1)
+    print(arg)
+    
+    generateGuestsList(arg)
