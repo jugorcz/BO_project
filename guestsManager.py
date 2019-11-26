@@ -79,9 +79,7 @@ def doStaff(guestsInOrder, leftGuests, resultFile, sumOfFrienship, guestsDiction
         print(guestsInOrder + "  ->  " + str(sumOfFrienship))
         resultFile.write(guestsInOrder + "  ->  " + str(sumOfFrienship) + "\n")
 
-
 def manageGuests(num):
-    generateGuestsList(num)
     print("\n\n--> set guests in order")
     file = open("generatedData.xml")
     tree = file.read()
@@ -105,4 +103,5 @@ if __name__ == "__main__":
         print("Error: wrong guests number")
         sys.exit(1)
 
+    generateGuestsList(arg)
     manageGuests(arg)

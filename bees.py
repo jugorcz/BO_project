@@ -1,8 +1,8 @@
 import random
-
 from lxml import etree
-
-import guestsManager
+import sys
+from guestsManager import manageGuests
+from guestGenerator import generateGuestsList
 
 worstSolutions = 10
 eliteBees = 3
@@ -114,13 +114,14 @@ def bees_algorithm(worst_solutions, best_solution):
     pass
 
 
-def main():
+def main(guests):
+    print("\n\n--> bees algorithm")
     guests_file = open("generatedData.xml")
     tree = guests_file.read()
     root = etree.fromstring(tree)
 
-    global guestsDictionary
-    guestsDictionary = guestsManager.createGuestsDictionary(root)
+    global guestsDictionary 
+    guestsDictionary = guests
 
     guests_file.close()
 
@@ -135,4 +136,17 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    argNum = len(sys.argv)
+    if argNum != 2:
+        print("Error: missing number of guests")
+        sys.exit(1)
+
+    arg = int(sys.argv[1])
+    if arg == 0:
+        print("Error: wrong guests number")
+        sys.exit(1)
+
+    generateGuestsList(arg)
+    guestsDictionary, guestsList = manageGuests(arg)
+
+    main(guestsDictionary)
