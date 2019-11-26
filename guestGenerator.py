@@ -11,11 +11,10 @@ def getCustomRandom():
     limit[4] = 8
     limit[5] = 7
     limitsSum = limit[0] + limit[1] + limit[2] + limit[3] + limit[4] + limit[5]
-    print("")
+
     rand = random.randint(0,limitsSum)
     base = 0
     for i in range(6):
-        print(str(i) + " range: " + str(base) + " - " + str(base + limit[i]) + " number: " + str(rand))
         if rand in range(base, base + limit[i]):
             return i 
         else:
@@ -27,10 +26,12 @@ def generateGuests(guestsNumber, document):
         for j in range(i + 1, guestsNumber):
             guestsPair = "[g" + str(i) + "][g" + str(j) + "]"
             guestsRelation = getCustomRandom()
+            print(guestsPair + " relation: " + str(guestsRelation))
             etree.SubElement(document, "pair", name=guestsPair).text = str(guestsRelation)
 
 
 def generateGuestsList(num):
+    print("--> generate guests list")
     guestsNumber = num
     root = etree.Element("root")
     etree.SubElement(root, "guestsNumber", name=str(guestsNumber))
@@ -51,6 +52,5 @@ if __name__ == "__main__":
     if arg == 0:
         print("Error: wrong guests number")
         sys.exit(1)
-    print(arg)
-    
+
     generateGuestsList(arg)

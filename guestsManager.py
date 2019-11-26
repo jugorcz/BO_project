@@ -1,10 +1,9 @@
 from lxml import etree
-
-guestsDictionary = dict()
-guestsList = []
-
+import sys
+from guestGenerator import generateGuestsList
 
 def createGuestsDictionary(root):
+    guestsDictionary = dict()
     for el in root.getchildren():
         for guest in el.getchildren():
             pair = guest.attrib['name']
@@ -14,6 +13,7 @@ def createGuestsDictionary(root):
 
 
 def createGuestsList(root):
+    guestsList = []
     firstPair = root[1][1].attrib['name']
     firstGuest = firstPair[1:-5]
     guestsNumber = int(root[0].attrib['name'])
@@ -25,16 +25,16 @@ def createGuestsList(root):
     return guestsList
 
 
-def setGuestsInOrder():
+def setGuestsInOrder(guestsDictionary, guestsList):
     resultFile = open("guestsInOrder.txt", "w")
     for guest in guestsList:
         guestsInOrder = guest
         leftGuests = guestsList.copy()
         leftGuests.remove(guest)
-        doStaff(guestsInOrder, leftGuests, resultFile, 0)
+        doStaff(guestsInOrder, leftGuests, resultFile, 0, guestsDictionary)
 
 
-def findBestFriend(person, leftGuests):
+def findBestFriend(person, leftGuests, guestsDictionary):
     bestFriend = ""
     maxFriendshipLevel = 0
 
@@ -65,32 +65,44 @@ def findBestFriend(person, leftGuests):
     return bestFriend, int(maxFriendshipLevel)
 
 
-def doStaff(guestsInOrder, leftGuests, resultFile, sumOfFrienship):
+def doStaff(guestsInOrder, leftGuests, resultFile, sumOfFrienship, guestsDictionary):
     if len(leftGuests) > 0:
         people = guestsInOrder.split('-')
         person = people[len(people) - 1]
-        bestFriend, friendshipLevel = findBestFriend(person, leftGuests)
+        bestFriend, friendshipLevel = findBestFriend(person, leftGuests, guestsDictionary)
         if int(friendshipLevel) > 0:
             leftGuestsWithoutFriend = leftGuests.copy()
             leftGuestsWithoutFriend.remove(bestFriend)
             doStaff(guestsInOrder + "-(" + str(friendshipLevel) + ")-" + bestFriend, leftGuestsWithoutFriend,
-                    resultFile, sumOfFrienship + friendshipLevel)
+                    resultFile, sumOfFrienship + friendshipLevel, guestsDictionary)
     else:
         print(guestsInOrder + "  ->  " + str(sumOfFrienship))
         resultFile.write(guestsInOrder + "  ->  " + str(sumOfFrienship) + "\n")
 
 
-def main():
+def manageGuests(num):
+    generateGuestsList(num)
+    print("\n\n--> set guests in order")
     file = open("generatedData.xml")
     tree = file.read()
     root = etree.fromstring(tree)
 
-    createGuestsDictionary(root)
-    createGuestsList(root)
-    setGuestsInOrder()
+    guestsDictionary = createGuestsDictionary(root)
+    guestsList = createGuestsList(root)
+    setGuestsInOrder(guestsDictionary, guestsList)
 
     file.close()
-
+    return guestsDictionary, guestsList
 
 if __name__ == "__main__":
-    main()
+    argNum = len(sys.argv)
+    if argNum != 2:
+        print("Error: missing number of guests")
+        sys.exit(1)
+
+    arg = int(sys.argv[1])
+    if arg == 0:
+        print("Error: wrong guests number")
+        sys.exit(1)
+
+    manageGuests(arg)
