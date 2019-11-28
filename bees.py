@@ -100,8 +100,9 @@ def bees_algorithm(worst_solutions, best_solution):
     write_solutions_to_file(worst_solutions.copy(), result_file)
 
     new_solutions = worst_solutions.copy()
-    while len(new_solutions) < 10:
+    while len(new_solutions) < worstSolutions:
         new_solutions.append(worst_solutions[random.randint(0, len(worst_solutions) - 1)])
+    new_solutions.sort(key=sort_by_sum)
 
     counter = 0
     while new_solutions[len(new_solutions) - 1]["sum"] < (best_solution["sum"] + 3):
