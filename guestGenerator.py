@@ -4,8 +4,8 @@ import sys
 
 def getCustomRandom():
     limit = [0 for i in range(6)]
-    limit[0] = 40
-    limit[1] = 20
+    limit[0] = 30
+    limit[1] = 30
     limit[2] = 15
     limit[3] = 10
     limit[4] = 8

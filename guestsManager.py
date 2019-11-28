@@ -2,8 +2,10 @@ from lxml import etree
 import sys
 from guestGenerator import generateGuestsList
 
+guestsDictionary = dict()
+resultList = []
+
 def createGuestsDictionary(root):
-    guestsDictionary = dict()
     for el in root.getchildren():
         for guest in el.getchildren():
             pair = guest.attrib['name']
@@ -25,59 +27,83 @@ def createGuestsList(root):
     return guestsList
 
 
-def setGuestsInOrder(guestsDictionary, guestsList):
+def setGuestsInOrder(guestsList):
     resultFile = open("guestsInOrder.txt", "w")
     for guest in guestsList:
-        guestsInOrder = guest
-        leftGuests = guestsList.copy()
-        leftGuests.remove(guest)
-        doStaff(guestsInOrder, leftGuests, resultFile, 0, guestsDictionary)
+        guestsInOrder = []
+        guestsInOrder.append(guest)
+        remainingGuests = guestsList.copy()
+        remainingGuests.remove(guest)
+        setInOrder(guestsInOrder, remainingGuests, resultFile)
 
 
-def findBestFriend(person, leftGuests, guestsDictionary):
+def findBestFriend(person, remainingGuests):
     bestFriend = ""
     maxFriendshipLevel = 0
 
-    personNumber = person[1:]
-    # print("\nszukam kolegi dla: " + personNumber)
+    #print("\nszukam kolegi dla: " + person)
 
-    for guest in leftGuests:
+    for guest in remainingGuests:
         if person == guest:
             continue
 
         if maxFriendshipLevel == 5:
             break
 
-        guestNumber = guest[1:]
-
-        if int(personNumber) > int(guestNumber):
-            pair = "[" + guest + "][" + person + "]"
-        else:
-            pair = "[" + person + "][" + guest + "]"
-
-        friendshipLevel = int(guestsDictionary[pair])
-        # print(pair + " = " + str(friendshipLevel))
+        friendshipLevel = getFriendshipLevel(person, guest)
         if friendshipLevel > maxFriendshipLevel:
             maxFriendshipLevel = friendshipLevel
             bestFriend = guest
 
-    # print("<3 = " + bestFriend)
+    #print("<3 = " + bestFriend)
     return bestFriend, int(maxFriendshipLevel)
 
+def getFriendshipLevel(person1, person2):
+    pair1 = "[" + person2 + "][" + person1 + "]"
+    pair2 = "[" + person1 + "][" + person2 + "]"
 
-def doStaff(guestsInOrder, leftGuests, resultFile, sumOfFrienship, guestsDictionary):
-    if len(leftGuests) > 0:
-        people = guestsInOrder.split('-')
-        person = people[len(people) - 1]
-        bestFriend, friendshipLevel = findBestFriend(person, leftGuests, guestsDictionary)
-        if int(friendshipLevel) > 0:
-            leftGuestsWithoutFriend = leftGuests.copy()
-            leftGuestsWithoutFriend.remove(bestFriend)
-            doStaff(guestsInOrder + "-(" + str(friendshipLevel) + ")-" + bestFriend, leftGuestsWithoutFriend,
-                    resultFile, sumOfFrienship + friendshipLevel, guestsDictionary)
+    if pair1 in guestsDictionary:
+        friendshipLevel = int(guestsDictionary[pair1])
+    elif pair2 in guestsDictionary:
+        friendshipLevel = int(guestsDictionary[pair2])
     else:
-        print(guestsInOrder + "  ->  " + str(sumOfFrienship))
-        resultFile.write(guestsInOrder + "  ->  " + str(sumOfFrienship) + "\n")
+        friendshipLevel = 0
+
+    #print(pair1 + " = " + str(friendshipLevel))
+    return friendshipLevel
+
+def createGuestsInOrderText(guestsInOrder):
+    guest1 = guestsInOrder[0]
+    guestsInOrderText = ""
+    leng = len(guestsInOrder)
+    sumOfFrienship = 0
+    for i in range(1, leng ):
+        guestsInOrderText += guest1  + "-("
+        guest2 = guestsInOrder[i]
+        friendshipLevel = getFriendshipLevel(guest1, guest2)
+        sumOfFrienship += friendshipLevel
+        guestsInOrderText += str(friendshipLevel) + ")-"
+        guest1 = guest2
+    guestsInOrderText += guest1
+    guestsInOrderText += "  ->  " + str(sumOfFrienship)
+    print(guestsInOrderText)
+    return guestsInOrderText
+
+def setInOrder(guestsInOrder, remainingGuests, resultFile):
+    if len(remainingGuests) > 0:
+        lastPersonIndex = len(guestsInOrder) - 1
+        person = guestsInOrder[lastPersonIndex]
+        bestFriend, friendshipLevel = findBestFriend(person, remainingGuests)
+        if int(friendshipLevel) > 0:
+            leftGuestsWithoutFriend = remainingGuests.copy()
+            leftGuestsWithoutFriend.remove(bestFriend)
+            guestsInOrder.append(bestFriend)
+            setInOrder(guestsInOrder, leftGuestsWithoutFriend,
+                    resultFile)
+    else:
+        guestsInOrderText = createGuestsInOrderText(guestsInOrder)
+        resultList.append(guestsInOrder)
+        resultFile.write(guestsInOrderText + "\n")
 
 def manageGuests(num):
     print("\n\n--> set guests in order")
@@ -85,12 +111,13 @@ def manageGuests(num):
     tree = file.read()
     root = etree.fromstring(tree)
 
-    guestsDictionary = createGuestsDictionary(root)
+    createGuestsDictionary(root)
     guestsList = createGuestsList(root)
-    setGuestsInOrder(guestsDictionary, guestsList)
+    setGuestsInOrder(guestsList)
 
     file.close()
-    return guestsDictionary, guestsList
+
+    return guestsDictionary, resultList
 
 if __name__ == "__main__":
     argNum = len(sys.argv)

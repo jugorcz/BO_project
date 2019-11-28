@@ -155,6 +155,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     generateGuestsList(arg)
-    guestsDictionary, guestsList = manageGuests(arg)
+    guestsDictionary, resultList = manageGuests(arg)
+    #resultList = tablica tablic
+    print(resultList)
 
     main(guestsDictionary)
