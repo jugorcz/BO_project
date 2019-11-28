@@ -1,8 +1,10 @@
 import random
-from lxml import etree
 import sys
-from guestsManager import manageGuests
+
+from lxml import etree
+
 from guestGenerator import generateGuestsList
+from guestsManager import manageGuests
 
 worstSolutions = 10
 eliteBees = 3
@@ -58,8 +60,10 @@ def calculate_relation(guest1, guest2):
 
 
 def update_relations(content, guest_index):
-    content[guest_index - 1] = calculate_relation(content[guest_index], content[guest_index - 2])
-    content[guest_index + 1] = calculate_relation(content[guest_index], content[guest_index + 2])
+    if 0 <= guest_index - 2:
+        content[guest_index - 1] = calculate_relation(content[guest_index], content[guest_index - 2])
+    if len(content) - 1 >= guest_index + 2:
+        content[guest_index + 1] = calculate_relation(content[guest_index], content[guest_index + 2])
 
 
 def improve_solution(solution, number_of_generations):
@@ -96,8 +100,11 @@ def bees_algorithm(worst_solutions, best_solution):
     write_solutions_to_file(worst_solutions.copy(), result_file)
 
     new_solutions = worst_solutions.copy()
+    while len(new_solutions) < 10:
+        new_solutions.append(worst_solutions[random.randint(0, len(worst_solutions) - 1)])
+
     counter = 0
-    while new_solutions[len(new_solutions) - 1]["sum"] < best_solution["sum"]:
+    while new_solutions[len(new_solutions) - 1]["sum"] < (best_solution["sum"] + 3):
         for i in range(0, normalBees):
             new_solutions[i] = improve_solution(new_solutions[i], normalGenerations)
         for i in range(normalBees, subEliteBees):
@@ -106,7 +113,7 @@ def bees_algorithm(worst_solutions, best_solution):
             new_solutions[i] = improve_solution(new_solutions[i], eliteGenerations)
         counter += 1
         result_file.write("Iteration " + str(counter) + ". \n")
-        # print("Iteration " + str(counter) + ". \n")
+        print("Iteration " + str(counter) + ". \n")
         write_solutions_to_file(new_solutions.copy(), result_file)
         new_solutions.sort(key=sort_by_sum)
     write_solutions_to_file(new_solutions.copy(), result_file)
@@ -120,7 +127,7 @@ def main(guests):
     tree = guests_file.read()
     root = etree.fromstring(tree)
 
-    global guestsDictionary 
+    global guestsDictionary
     guestsDictionary = guests
 
     guests_file.close()
