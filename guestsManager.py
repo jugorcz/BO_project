@@ -72,6 +72,16 @@ def getFriendshipLevel(person1, person2):
     #print(pair1 + " = " + str(friendshipLevel))
     return friendshipLevel
 
+def getsumOfFriendshipLevel(guestsInOrder):
+    guest1 = guestsInOrder[0]
+    sumOfFrienship = 0
+    for i in range(1, leng ):
+        guest2 = guestsInOrder[i]
+        friendshipLevel = getFriendshipLevel(guest1, guest2)
+        sumOfFrienship += friendshipLevel
+        guest1 = guest2
+    return sumOfFrienship
+
 def createGuestsInOrderText(guestsInOrder):
     guest1 = guestsInOrder[0]
     guestsInOrderText = ""
