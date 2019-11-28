@@ -58,6 +58,18 @@ def findBestFriend(person, remainingGuests):
     #print("<3 = " + bestFriend)
     return bestFriend, int(maxFriendshipLevel)
 
+def findFriend(person, remainingGuests):
+    friend = ""
+    friendshipLevel = 0
+
+    for guest in remainingGuests:
+        friendshipLevel = getFriendshipLevel(person, guest)
+        if friendshipLevel > 0:
+            friend = guest
+            break;
+
+    return friend, friendshipLevel
+
 def getFriendshipLevel(person1, person2):
     pair1 = "[" + person2 + "][" + person1 + "]"
     pair2 = "[" + person1 + "][" + person2 + "]"
@@ -103,7 +115,7 @@ def setInOrder(guestsInOrder, remainingGuests, resultFile):
     if len(remainingGuests) > 0:
         lastPersonIndex = len(guestsInOrder) - 1
         person = guestsInOrder[lastPersonIndex]
-        bestFriend, friendshipLevel = findBestFriend(person, remainingGuests)
+        bestFriend, friendshipLevel = findFriend(person, remainingGuests)
         if int(friendshipLevel) > 0:
             leftGuestsWithoutFriend = remainingGuests.copy()
             leftGuestsWithoutFriend.remove(bestFriend)
