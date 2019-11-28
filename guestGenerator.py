@@ -2,14 +2,26 @@ from lxml import etree
 import random
 import sys
 
+limit = [0 for i in range(6)]
+
+def setLimits(percentageRelationList):
+    if len(percentageRelationList) != 6:
+        limit[0] = 30
+        limit[1] = 30
+        limit[2] = 15
+        limit[3] = 10
+        limit[4] = 8
+        limit[5] = 7
+    else:
+        limit[0] = int(percentageRelationList[0])
+        limit[1] = int(percentageRelationList[1])
+        limit[2] = int(percentageRelationList[2])
+        limit[3] = int(percentageRelationList[3])
+        limit[4] = int(percentageRelationList[4])
+        limit[5] = int(percentageRelationList[5])
+
+
 def getCustomRandom():
-    limit = [0 for i in range(6)]
-    limit[0] = 30
-    limit[1] = 30
-    limit[2] = 15
-    limit[3] = 10
-    limit[4] = 8
-    limit[5] = 7
     limitsSum = limit[0] + limit[1] + limit[2] + limit[3] + limit[4] + limit[5]
 
     rand = random.randint(0,limitsSum)
@@ -30,13 +42,13 @@ def generateGuests(guestsNumber, document):
             etree.SubElement(document, "pair", name=guestsPair).text = str(guestsRelation)
 
 
-def generateGuestsList(num):
+def generateGuestsList(num, percentageRelationList=[]):
     print("--> generate guests list")
     guestsNumber = num
     root = etree.Element("root")
     etree.SubElement(root, "guestsNumber", name=str(guestsNumber))
     document = etree.SubElement(root, "guestsList")
-
+    setLimits(percentageRelationList)
     generateGuests(guestsNumber, document)
 
     et = etree.ElementTree(root)
@@ -44,7 +56,7 @@ def generateGuestsList(num):
 
 if __name__ == "__main__":
     argNum = len(sys.argv)
-    if argNum != 2:
+    if argNum < 2:
         print("Error: missing number of guests")
         sys.exit(1)
 
@@ -53,4 +65,8 @@ if __name__ == "__main__":
         print("Error: wrong guests number")
         sys.exit(1)
 
-    generateGuestsList(arg)
+    percentageRelationList = []
+    if argNum == 8: 
+        percentageRelationList = sys.argv[2:]
+
+    generateGuestsList(arg, percentageRelationList)

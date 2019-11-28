@@ -4,6 +4,7 @@ from guestGenerator import generateGuestsList
 
 guestsDictionary = dict()
 resultList = []
+lookForBestFriend = False
 
 def createGuestsDictionary(root):
     for el in root.getchildren():
@@ -12,7 +13,6 @@ def createGuestsDictionary(root):
             value = guest.text
             guestsDictionary[pair] = value
     return guestsDictionary
-
 
 def createGuestsList(root):
     guestsList = []
@@ -115,7 +115,10 @@ def setInOrder(guestsInOrder, remainingGuests, resultFile):
     if len(remainingGuests) > 0:
         lastPersonIndex = len(guestsInOrder) - 1
         person = guestsInOrder[lastPersonIndex]
-        bestFriend, friendshipLevel = findFriend(person, remainingGuests)
+        if lookForBestFriend:
+            bestFriend, friendshipLevel = findBestFriend(person, remainingGuests)
+        else:
+            bestFriend, friendshipLevel = findFriend(person, remainingGuests)
         if int(friendshipLevel) > 0:
             leftGuestsWithoutFriend = remainingGuests.copy()
             leftGuestsWithoutFriend.remove(bestFriend)
@@ -127,7 +130,7 @@ def setInOrder(guestsInOrder, remainingGuests, resultFile):
         resultList.append(guestsInOrder)
         resultFile.write(guestsInOrderText + "\n")
 
-def manageGuests(num):
+def manageGuests(num, bestFriend = False):
     print("\n\n--> set guests in order")
     file = open("generatedData.xml")
     tree = file.read()
@@ -143,7 +146,7 @@ def manageGuests(num):
 
 if __name__ == "__main__":
     argNum = len(sys.argv)
-    if argNum != 2:
+    if argNum < 2:
         print("Error: missing number of guests")
         sys.exit(1)
 
@@ -152,5 +155,19 @@ if __name__ == "__main__":
         print("Error: wrong guests number")
         sys.exit(1)
 
-    generateGuestsList(arg)
+    generate = False
+    if argNum > 2:
+        if sys.argv[2] == "bestFriend":
+            lookForBestFriend = True
+        elif sys.argv[2] == "generate":
+            generate = True
+
+    if argNum > 3:
+        if sys.argv[3] == "bestFriend":
+            lookForBestFriend = True
+        elif sys.argv[3] == "generate":
+            generate = True
+
+    if generate:
+        generateGuestsList(arg)
     manageGuests(arg)
