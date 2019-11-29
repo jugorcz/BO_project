@@ -3,8 +3,9 @@ import sys
 
 from lxml import etree
 
+import guestsManager
 from guestGenerator import generateGuestsList
-from guestsManager import manageGuests
+from guestsManager import manageGuests, findBestFriend, getFriendshipLevel
 
 worstSolutions = 10
 eliteBees = 3
@@ -13,6 +14,8 @@ subEliteBees = 2
 subEliteGenerations = 2
 normalBees = worstSolutions - eliteBees - subEliteBees
 normalGenerations = 1
+
+desiredImprovement = 750
 
 
 def sort_by_sum(val):
@@ -25,9 +28,9 @@ def take_worst_solutions_and_best_solution(number_of_solutions, file):
         line_content = line.split("  ->  ")
         sums_of_friendships.append({
             "content":
-            line_content[0].replace("(", "").replace(")", "").split("-"),
+                line_content[0].replace("(", "").replace(")", "").split("-"),
             "sum":
-            int(line_content[1])
+                int(line_content[1])
         })
 
     sums_of_friendships.sort(key=sort_by_sum)
@@ -54,42 +57,44 @@ def calculate_content_sum(content):
 
 
 def improve_solution(solution, number_of_generations):
-    new_solutions = []
+    improved_solutions = []
 
     for i in range(0, number_of_generations):
         new_solution_content = solution["content"].copy()
-        initialSize = len(new_solution_content)
-        startingPersonIndex = random.randint(0, (initialSize - 1) /2) * 2
-        if startingPersonIndex == initialSize - 1:
-          startingPersonIndex = startingPersonIndex - 2
-        part_to_change = new_solution_content[-(initialSize-startingPersonIndex):]
-        new_solution_content = new_solution_content[:startingPersonIndex - 1]
+        initial_size = len(new_solution_content)
+        starting_person_index = random.randint(0, (initial_size - 1) / 2) * 2
+        if starting_person_index == initial_size - 1:
+            starting_person_index = starting_person_index - 2
+        part_to_change = new_solution_content[-(initial_size - starting_person_index):]
+        new_solution_content = new_solution_content[:starting_person_index - 1]
         del part_to_change[1::2]
-        guestsNewOrder = setGuestsInOrder(part_to_change)
-        if startingPersonIndex != 0:
-          new_solution_content.append(str(getFriendshipLevel(new_solution_content[startingPersonIndex - 2], part_to_change[1])))
-        if guestsNewOrder != None:
-          new_solution_content = new_solution_content + guestsNewOrder
-        if len(new_solution_content) == initialSize:
-          new_solutions.append({
-            "content": new_solution_content,
-            "sum": calculate_content_sum(new_solution_content)
-          })
+        guests_new_order = setGuestsInOrder(part_to_change)
+        if starting_person_index != 0:
+            new_solution_content.append(
+                str(getFriendshipLevel(new_solution_content[starting_person_index - 2], part_to_change[1])))
+        if guests_new_order is not None:
+            new_solution_content = new_solution_content + guests_new_order
+        if len(new_solution_content) == initial_size:
+            improved_solutions.append({
+                "content": new_solution_content,
+                "sum": calculate_content_sum(new_solution_content)
+            })
 
-    if len(new_solutions) > 0:
-      new_solutions.sort(key=sort_by_sum)
-      return new_solutions[len(new_solutions) - 1]
+    if len(improved_solutions) > 0:
+        improved_solutions.sort(key=sort_by_sum)
+        return improved_solutions[len(improved_solutions) - 1]
     else:
-      return solution
+        return solution
 
 
 def setGuestsInOrder(guestsList):
-      guestsInOrder = []
-      secondGuest = guestsList[1]
-      guestsInOrder.append(secondGuest)
-      remainingGuests = guestsList.copy()
-      remainingGuests.remove(secondGuest)
-      return setInOrder(guestsInOrder, remainingGuests)
+    guestsInOrder = []
+    secondGuest = guestsList[1]
+    guestsInOrder.append(secondGuest)
+    remainingGuests = guestsList.copy()
+    remainingGuests.remove(secondGuest)
+    return setInOrder(guestsInOrder, remainingGuests)
+
 
 def setInOrder(guestsInOrder, remainingGuests):
     if len(remainingGuests) > 0:
@@ -103,42 +108,7 @@ def setInOrder(guestsInOrder, remainingGuests):
             guestsInOrder.append(bestFriend)
             return setInOrder(guestsInOrder, leftGuestsWithoutFriend)
     else:
-      return guestsInOrder
-
-def findBestFriend(person, remainingGuests):
-    bestFriend = ""
-    maxFriendshipLevel = 0
-
-    #print("\nszukam kolegi dla: " + person)
-
-    for guest in remainingGuests:
-        if person == guest:
-            continue
-
-        if maxFriendshipLevel == 5:
-            break
-
-        friendshipLevel = getFriendshipLevel(person, guest)
-        if friendshipLevel > maxFriendshipLevel:
-            maxFriendshipLevel = friendshipLevel
-            bestFriend = guest
-
-    #print("<3 = " + bestFriend)
-    return bestFriend, int(maxFriendshipLevel)
-
-def getFriendshipLevel(person1, person2):
-    pair1 = "[" + person2 + "][" + person1 + "]"
-    pair2 = "[" + person1 + "][" + person2 + "]"
-
-    if pair1 in guestsDictionary:
-        friendshipLevel = int(guestsDictionary[pair1])
-    elif pair2 in guestsDictionary:
-        friendshipLevel = int(guestsDictionary[pair2])
-    else:
-        friendshipLevel = 0
-
-    #print(pair1 + " = " + str(friendshipLevel))
-    return friendshipLevel
+        return guestsInOrder
 
 
 def bees_algorithm(worst_solutions, best_solution):
@@ -156,7 +126,7 @@ def bees_algorithm(worst_solutions, best_solution):
 
     counter = 0
     while new_solutions[len(new_solutions) - 1]["sum"] < (
-            best_solution["sum"] + 1):
+            best_solution["sum"] + desiredImprovement):
         for i in range(0, normalBees):
             new_solutions[i] = improve_solution(new_solutions[i],
                                                 normalGenerations)
@@ -183,7 +153,10 @@ def main(guests):
     root = etree.fromstring(tree)
 
     global guestsDictionary
-    guestsDictionary = guests
+    if guests is not None:
+        guestsDictionary = guests
+    else:
+        guestsDictionary = guestsManager.createGuestsDictionary(root)
 
     guests_file.close()
 
@@ -199,11 +172,17 @@ def main(guests):
 
 
 if __name__ == "__main__":
-    arg = 10
-
-    generateGuestsList(arg)
-    guestsDictionary, resultList = manageGuests(arg)
-    #resultList = tablica tablic
-    print(resultList)
-
-    main(guestsDictionary)
+    arguments_number = len(sys.argv)
+    if arguments_number < 2:
+        main(None)
+    elif arguments_number == 2:
+        guests_number = int(sys.argv[1])
+        if guests_number <= 0:
+            print("Error: wrong guests number.")
+            sys.exit(1)
+        generateGuestsList(guests_number)
+        guestsDictionary, resultList = manageGuests(guests_number)
+        main(guestsDictionary)
+    else:
+        print("Error: too many arguments.")
+        sys.exit(1)
